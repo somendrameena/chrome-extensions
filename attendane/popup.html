@@ -1,39 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Attendance</title>
+    <head>
+        <meta charset="UTF-8">
+        <title>Attendance</title>
 
-    <style>
-        body {
-            width: 220px;
-            padding: 15px;
-            font-family: Arial, sans-serif;
-        }
+        <style>
+            body {
+                width: 220px;
+                padding: 15px;
+                font-family: Arial, sans-serif;
+            }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            font-size: 15px;
-            cursor: pointer;
-        }
+            button {
+                width: 100%;
+                padding: 10px;
+                cursor: pointer;
+            }
 
-        #status {
-            margin-top: 12px;
-            color: green;
-        }
-    </style>
-</head>
+            #status {
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
 
-<body>
+    <body>
 
-    <button id="checkinBtn">
-        Check In
-    </button>
+        <div id="status">Loading...</div>
 
-    <div id="status"></div>
+        <button id="loginBtn" style="display:none;">
+            Login
+        </button>
 
-    <script src="popup.js"></script>
+        <button id="checkInBtn" style="display:none;">
+            Check In
+        </button>
 
-</body>
+        <script src="popup.js"></script>
+
+    </body>
 </html>

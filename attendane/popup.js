@@ -1,32 +1,19 @@
-const button = document.getElementById("checkinBtn");
 const status = document.getElementById("status");
+const loginBtn = document.getElementById("loginBtn");
+const checkInBtn = document.getElementById("checkInBtn");
 
-button.addEventListener("click", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-    status.innerText = "Checking in...";
+    chrome.storage.local.get(["accessToken"], (result) => {
 
-    try {
-
-        const response = await fetch("http://localhost:8000/api/v1/users/login/", {
-            method: "POST",
-
-            headers: {
-                // "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({})
-        });
-
-        if (response.ok) {
-            status.innerText = "✅ Checked In";
+        if (result.accessToken) {
+            status.innerText = "Logged In";
+            checkInBtn.style.display = "block";
         } else {
-            status.innerText = "❌ Failed";
+            status.innerText = "Not Logged In";
+            loginBtn.style.display = "block";
         }
 
-    } catch (err) {
-        console.error(err);
-        status.innerText = "Network Error";
-    }
+    });
 
 });
