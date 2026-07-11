@@ -1,19 +1,28 @@
-const status = document.getElementById("status");
-const loginBtn = document.getElementById("loginBtn");
-const checkInBtn = document.getElementById("checkInBtn");
+const loginView = document.getElementById("loginView");
+const homeView = document.getElementById("homeView");
 
 document.addEventListener("DOMContentLoaded", () => {
+    renderUI();
+});
 
+function renderUI() {
     chrome.storage.local.get(["accessToken"], (result) => {
 
         if (result.accessToken) {
-            status.innerText = "Logged In";
-            checkInBtn.style.display = "block";
+            showHomeView();
         } else {
-            status.innerText = "Not Logged In";
-            loginBtn.style.display = "block";
+            showLoginView();
         }
 
     });
+}
 
-});
+function showLoginView() {
+    loginView.classList.add("active");
+    homeView.classList.remove("active");
+}
+
+function showHomeView() {
+    homeView.classList.add("active");
+    loginView.classList.remove("active");
+}
