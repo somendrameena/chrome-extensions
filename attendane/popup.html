@@ -96,6 +96,12 @@
                 background: #f5faff;
             }
 
+
+            #status {
+                margin-top: 12px;
+                color: green;
+            }
+
             .status-card {
                 border: 1px solid #e8e8e8;
                 border-radius: 8px;
@@ -120,6 +126,8 @@
     <body>
 
         <div class="container">
+
+            <div id="status"></div>
 
             <!-- LOGIN VIEW -->
             <div id="loginView" class="view">
@@ -154,7 +162,7 @@
             <div id="homeView" class="view">
 
                 <h2>Attendance Management</h2>
-                <p class="subtitle">You're logged in</p>
+                <p class="subtitle" id="welcomeText"></p>
 
                 <div class="status-card">
                     <div class="status-title">Status</div>

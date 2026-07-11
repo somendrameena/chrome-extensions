@@ -4,6 +4,7 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const welcomeText = document.getElementById("welcomeText");
 
 document.addEventListener("DOMContentLoaded", () => {
     renderUI();
@@ -28,6 +29,10 @@ function showLoginView() {
 }
 
 function showHomeView() {
+    chrome.storage.local.get(["name"], (result) => {
+        welcomeText.innerText = `Hi ${result.name}`;
+    });
+
     homeView.classList.add("active");
     loginView.classList.remove("active");
 }
