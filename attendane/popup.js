@@ -144,3 +144,59 @@ async function loadAttendanceStatus() {
         }
     });
 }
+
+async function checkIn() {
+    chrome.storage.local.get(["accessToken"], async (result) => {
+
+        try {
+            const response = await fetch(
+                "https://yugyog.api-workspace.createbytes.com/api/v1/attendance/check-in/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${result.accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            if (response.ok) {
+                await loadAttendanceStatus();
+            } else {
+                console.error("Check In failed");
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+
+    });
+}
+
+async function checkOut() {
+    chrome.storage.local.get(["accessToken"], async (result) => {
+
+        try {
+            const response = await fetch(
+                "https://yugyog.api-workspace.createbytes.com/api/v1/attendance/check-out/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${result.accessToken}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            if (response.ok) {
+                await loadAttendanceStatus();
+            } else {
+                console.error("Check Out failed");
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+
+    });
+}
