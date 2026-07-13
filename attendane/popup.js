@@ -5,6 +5,7 @@ const passwordInput = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const welcomeText = document.getElementById("welcomeText");
+const attendanceBtn = document.getElementById("attendanceBtn");
 
 document.addEventListener("DOMContentLoaded", () => {
     renderUI();
@@ -124,33 +125,22 @@ async function loadAttendanceStatus() {
 
             const data = await response.json();
 
-            updateAttendanceButton(data);
+            let checkedIn = (
+                data.results.length > 0 &&
+                data.results[0].user_entry_logs &&
+                data.results[0].user_entry_logs.length > 0
+            );
+
+            if (checkedIn) {
+                attendanceBtn.innerText = "Check Out";
+                attendanceBtn.classList.add("checkout");
+            } else {
+                attendanceBtn.innerText = "Check In";
+                attendanceBtn.classList.remove("checkout");
+            }
 
         } catch (err) {
             console.error(err);
         }
     });
-}
-
-function updateAttendanceButton(data) {
-
-    const attendanceBtn = document.getElementById("attendanceBtn");
-
-    let checkedIn = false;
-
-    if (
-        data.results.length > 0 &&
-        data.results[0].user_entry_logs &&
-        data.results[0].user_entry_logs.length > 0
-    ) {
-        checkedIn = true;
-    }
-
-    if (checkedIn) {
-        attendanceBtn.innerText = "Check Out";
-        attendanceBtn.classList.add("checkout");
-    } else {
-        attendanceBtn.innerText = "Check In";
-        attendanceBtn.classList.remove("checkout");
-    }
 }
