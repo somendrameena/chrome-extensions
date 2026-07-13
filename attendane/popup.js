@@ -40,6 +40,7 @@ function showHomeView() {
 
     homeView.classList.add("active");
     loginView.classList.remove("active");
+    loadAttendanceStatus();
 }
 
 async function login() {
@@ -100,4 +101,56 @@ function logout() {
     chrome.storage.local.remove("accessToken", () => {
         renderUI();
     });
+}
+
+async function loadAttendanceStatus() {
+    chrome.storage.local.get(["accessToken"], async (result) => {
+
+        if (!result.accessToken) return;
+
+        const today = new Date().toISOString().split("T")[0];
+
+        try {
+            const response = await fetch(
+                `https://cb.api-workspace.createbytes.com/api/v1/attendance/me/?date_after=${today}&date_before=${today}`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${result.accessToken}`
+                    }
+                }
+            );
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            updateAttendanceButton(data);
+
+        } catch (err) {
+            console.error(err);
+        }
+    });
+}
+
+function updateAttendanceButton(data) {
+
+    const attendanceBtn = document.getElementById("attendanceBtn");
+
+    let checkedIn = false;
+
+    if (
+        data.results.length > 0 &&
+        data.results[0].user_entry_logs &&
+        data.results[0].user_entry_logs.length > 0
+    ) {
+        checkedIn = true;
+    }
+
+    if (checkedIn) {
+        attendanceBtn.innerText = "Check Out";
+        attendanceBtn.classList.add("checkout");
+    } else {
+        attendanceBtn.innerText = "Check In";
+        attendanceBtn.classList.remove("checkout");
+    }
 }
