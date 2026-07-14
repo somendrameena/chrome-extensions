@@ -134,9 +134,11 @@ async function loadAttendanceStatus() {
             if (checkedIn) {
                 attendanceBtn.innerText = "Check Out";
                 attendanceBtn.classList.add("checkout");
+                attendanceBtn.onclick = checkOut;
             } else {
                 attendanceBtn.innerText = "Check In";
                 attendanceBtn.classList.remove("checkout");
+                attendanceBtn.onclick = checkIn;
             }
 
         } catch (err) {
