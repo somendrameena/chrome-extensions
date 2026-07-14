@@ -120,6 +120,10 @@ async function loadAttendanceStatus() {
                     }
                 }
             );
+            if (response.status === 401) {
+                logout();
+                return;
+            }
 
             if (!response.ok) return;
 
