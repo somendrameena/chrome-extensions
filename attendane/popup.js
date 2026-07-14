@@ -146,8 +146,7 @@ async function loadAttendanceStatus() {
 
             let checkedIn = (
                 data.results.length > 0 &&
-                data.results[0].user_entry_logs &&
-                data.results[0].user_entry_logs.length > 0
+                data.results[0].user_entry_logs?.length > 0
             );
 
             if (checkedIn) {
