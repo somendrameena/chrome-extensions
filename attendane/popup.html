@@ -104,29 +104,29 @@
                 background: #f5faff;
             }
 
-
-            #status {
-                margin-top: 12px;
-                color: green;
+            .subtitle-row {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                margin-bottom: 24px;
             }
 
-            .status-card {
-                border: 1px solid #e8e8e8;
-                border-radius: 8px;
-                padding: 16px;
-                margin-bottom: 20px;
+            .subtitle-row .subtitle {
+                margin-bottom: 0;
             }
 
-            .status-title {
-                color: #888;
+            .logout-link {
+                color: #ff4d4f;
                 font-size: 13px;
-                margin-bottom: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                user-select: none;
+                margin-left: 8px;
             }
 
-            .status-value {
-                color: #1890ff;
-                font-size: 20px;
-                font-weight: bold;
+            .logout-link:hover {
+                color: #cf1322;
+                text-decoration: underline;
             }
         </style>
     </head>
@@ -170,21 +170,16 @@
             <div id="homeView" class="view">
 
                 <h2>Attendance Management</h2>
-                <p class="subtitle" id="welcomeText"></p>
-
-                <div class="status-card">
-                    <div class="status-title">Status</div>
-                    <div class="status-value" id="attendanceStatus">
-                        Ready
-                    </div>
+                <div class="subtitle-row">
+                    <p class="subtitle" id="welcomeText"></p>
+                    <p></p>
+                    <span id="logoutBtn" class="logout-link">
+                        Logout
+                    </span>
                 </div>
 
                 <button id="attendanceBtn" class="btn">
                     Check In
-                </button>
-
-                <button id="logoutBtn" class="btn btn-secondary">
-                    Logout
                 </button>
 
             </div>
