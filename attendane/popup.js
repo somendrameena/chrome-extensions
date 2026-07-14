@@ -6,6 +6,7 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const welcomeText = document.getElementById("welcomeText");
 const attendanceBtn = document.getElementById("attendanceBtn");
+const loader = document.getElementById("loader");
 
 document.addEventListener("DOMContentLoaded", () => {
     renderUI();
@@ -42,6 +43,16 @@ function showHomeView() {
     homeView.classList.add("active");
     loginView.classList.remove("active");
     loadAttendanceStatus();
+}
+
+function showLoader() {
+    loader.classList.add("active");
+    attendanceBtn.style.display = "none";
+}
+
+function hideLoader() {
+    loader.classList.remove("active");
+    attendanceBtn.style.display = "block";
 }
 
 async function login() {
@@ -107,11 +118,15 @@ function logout() {
 async function loadAttendanceStatus() {
     chrome.storage.local.get(["accessToken"], async (result) => {
 
-        if (!result.accessToken) return;
+        if (!result.accessToken) {
+            logout();
+            return;
+        }
 
         const today = new Date().toISOString().split("T")[0];
 
         try {
+            showLoader();
             const response = await fetch(
                 `https://cb.api-workspace.createbytes.com/api/v1/attendance/me/?date_after=${today}&date_before=${today}`,
                 {
@@ -144,9 +159,10 @@ async function loadAttendanceStatus() {
                 attendanceBtn.classList.remove("checkout");
                 attendanceBtn.onclick = checkIn;
             }
-
         } catch (err) {
-            console.error(err);
+            console.log(err);
+        } finally {
+            hideLoader();
         }
     });
 }
