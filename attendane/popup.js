@@ -8,6 +8,8 @@ const welcomeText = document.getElementById("welcomeText");
 const attendanceBtn = document.getElementById("attendanceBtn");
 const loader = document.getElementById("loader");
 
+const BASE_URL = "https://cb.api-workspace.createbytes.com/api/v1";
+
 document.addEventListener("DOMContentLoaded", () => {
     renderUI();
 
@@ -73,7 +75,7 @@ async function login() {
             password: password,
         };
 
-        const response = await fetch("https://cb.api-workspace.createbytes.com/api/v1/auth/login/", {
+        const response = await fetch(`${BASE_URL}/auth/login/`, {
             method: "POST",
 
             headers: {
@@ -128,7 +130,7 @@ async function loadAttendanceStatus() {
         try {
             showLoader();
             const response = await fetch(
-                `https://cb.api-workspace.createbytes.com/api/v1/attendance/me/?date_after=${today}&date_before=${today}`,
+                `${BASE_URL}/attendance/me/?date_after=${today}&date_before=${today}`,
                 {
                     headers: {
                         "Authorization": `Bearer ${result.accessToken}`
@@ -181,7 +183,7 @@ async function checkIn() {
 
         try {
             const response = await fetch(
-                "https://yugyog.api-workspace.createbytes.com/api/v1/attendance/check-in/",
+                `${BASE_URL}/api/v1/attendance/check-in/`,
                 {
                     method: "POST",
                     headers: {
@@ -209,7 +211,7 @@ async function checkOut() {
 
         try {
             const response = await fetch(
-                "https://yugyog.api-workspace.createbytes.com/api/v1/attendance/check-out/",
+                `${BASE_URL}/attendance/check-out/`,
                 {
                     method: "POST",
                     headers: {
