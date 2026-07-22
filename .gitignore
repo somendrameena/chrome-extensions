@@ -1,0 +1,5 @@
+# Pem files
+*.pem
+
+# Build
+*.crx
