@@ -149,28 +149,16 @@ async function loadAttendanceStatus() {
                     : [];
 
             if (logs.length === 0) {
-                // No records → Check In
-                attendanceBtn.innerText = "Check In";
-                attendanceBtn.disabled = false;
-                attendanceBtn.classList.remove("checkout");
-                attendanceBtn.onclick = checkIn;
-
+                // Check In
+                setAttendanceButton("Check In", false, false, checkIn);
             } else {
                 const lastLog = logs[logs.length - 1];
-
                 if (lastLog.type === "in") {
-                    // Last action was Check In → Check Out
-                    attendanceBtn.innerText = "Check Out";
-                    attendanceBtn.disabled = false;
-                    attendanceBtn.classList.add("checkout");
-                    attendanceBtn.onclick = checkOut;
-
+                    // Check Out
+                    setAttendanceButton("Check Out", false, true, checkOut);
                 } else {
-                    // Last action was Check Out → Disable button
-                    attendanceBtn.innerText = "Checked Out";
-                    attendanceBtn.disabled = true;
-                    attendanceBtn.classList.add("checkout");
-                    attendanceBtn.onclick = null;
+                    // Checked Out
+                    setAttendanceButton("Checked Out", true, true, null);
                 }
             }
         } catch (err) {
@@ -179,6 +167,13 @@ async function loadAttendanceStatus() {
             hideLoader();
         }
     });
+}
+
+function setAttendanceButton(text, disabled, isCheckout, onClick) {
+    attendanceBtn.innerText = text;
+    attendanceBtn.disabled = disabled;
+    attendanceBtn.classList.toggle("checkout", isCheckout);
+    attendanceBtn.onclick = onClick;
 }
 
 async function checkIn() {
