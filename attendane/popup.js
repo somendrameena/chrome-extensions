@@ -144,19 +144,34 @@ async function loadAttendanceStatus() {
 
             const data = await response.json();
 
-            let checkedIn = (
-                data.results.length > 0 &&
-                data.results[0].user_entry_logs?.length > 0
-            );
+            const logs = data.results.length > 0
+                    ? data.results[0].user_entry_logs || []
+                    : [];
 
-            if (checkedIn) {
-                attendanceBtn.innerText = "Check Out";
-                attendanceBtn.classList.add("checkout");
-                attendanceBtn.onclick = checkOut;
-            } else {
+            if (logs.length === 0) {
+                // No records → Check In
                 attendanceBtn.innerText = "Check In";
+                attendanceBtn.disabled = false;
                 attendanceBtn.classList.remove("checkout");
                 attendanceBtn.onclick = checkIn;
+
+            } else {
+                const lastLog = logs[logs.length - 1];
+
+                if (lastLog.type === "in") {
+                    // Last action was Check In → Check Out
+                    attendanceBtn.innerText = "Check Out";
+                    attendanceBtn.disabled = false;
+                    attendanceBtn.classList.add("checkout");
+                    attendanceBtn.onclick = checkOut;
+
+                } else {
+                    // Last action was Check Out → Disable button
+                    attendanceBtn.innerText = "Checked Out";
+                    attendanceBtn.disabled = true;
+                    attendanceBtn.classList.add("checkout");
+                    attendanceBtn.onclick = null;
+                }
             }
         } catch (err) {
             console.log(err);
