@@ -30,7 +30,7 @@ function renderUI() {
 function showLoginView() {
     chrome.storage.local.get(["email", "password"], (result) => {
         emailInput.value = result.email || "";
-        passwordInput.value = result.password || "";
+        passwordInput.value = "";
     });
 
     loginView.classList.add("active");
@@ -95,7 +95,6 @@ async function login() {
                     accessToken: data.access,
                     name: data.user.name,
                     email: email,
-                    password: password,
                 },
                 () => {
                     renderUI();
