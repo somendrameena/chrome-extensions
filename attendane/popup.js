@@ -145,22 +145,25 @@ async function loadAttendanceStatus() {
 
             const data = await response.json();
 
-            const logs = data.results.length > 0
+            const logs =
+                data.results.length > 0
                     ? data.results[0].user_entry_logs || []
                     : [];
 
-            if (logs.length === 0) {
-                // Check In
-                setAttendanceButton("Check In", false, false, checkIn);
+            const hasCheckIn = logs.some(log => log.type === "in");
+            const hasCheckOut = logs.some(log => log.type === "out");
+
+            if (!hasCheckIn) {
+                // No check-in yet
+                setAttendanceButton("Check In", false, "checkin", checkIn);
+
+            } else if (!hasCheckOut) {
+                // Checked in, but not checked out
+                setAttendanceButton("Check Out", false, "checkout", checkOut);
+
             } else {
-                const lastLog = logs[logs.length - 1];
-                if (lastLog.type === "in") {
-                    // Check Out
-                    setAttendanceButton("Check Out", false, true, checkOut);
-                } else {
-                    // Checked Out
-                    setAttendanceButton("Checked Out", true, true, null);
-                }
+                // Both check-in and check-out completed
+                setAttendanceButton("Checked Out", true, "disabled", null);
             }
         } catch (err) {
             console.log(err);
@@ -170,11 +173,15 @@ async function loadAttendanceStatus() {
     });
 }
 
-function setAttendanceButton(text, disabled, isCheckout, onClick) {
+function setAttendanceButton(text, disabled, buttonClass, onClick) {
     attendanceBtn.innerText = text;
     attendanceBtn.disabled = disabled;
-    attendanceBtn.classList.toggle("checkout", isCheckout);
     attendanceBtn.onclick = onClick;
+
+    attendanceBtn.classList.remove("checkin", "checkout", "disabled");
+    if (buttonClass) {
+        attendanceBtn.classList.add(buttonClass);
+    }
 }
 
 async function checkIn() {
@@ -182,7 +189,7 @@ async function checkIn() {
 
         try {
             const response = await fetch(
-                `${BASE_URL}/api/v1/attendance/check-in/`,
+                `${BASE_URL}/attendance/check-in/`,
                 {
                     method: "POST",
                     headers: {
