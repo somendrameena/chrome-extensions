@@ -77,7 +77,7 @@ async function login() {
 
         const response = await fetch(`${BASE_URL}/auth/login/`, {
             method: "POST",
-
+            credentials: "omit",
             headers: {
                 "Content-Type": "application/json"
             },
