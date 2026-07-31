@@ -6,7 +6,8 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const welcomeText = document.getElementById("welcomeText");
 const attendanceBtn = document.getElementById("attendanceBtn");
-const loader = document.getElementById("loader");
+const loginError = document.getElementById("loginError");
+const attendanceError = document.getElementById("attendanceError");
 
 const BASE_URL = "https://cb.api-workspace.createbytes.com/api/v1";
 
@@ -47,28 +48,64 @@ function showHomeView() {
     loadAttendanceStatus();
 }
 
-function showLoader() {
-    loader.classList.add("active");
-    attendanceBtn.style.display = "none";
+function setButtonLoading(button, isLoading) {
+    if (isLoading) {
+        if (button.getAttribute("aria-busy") === "true") {
+            return;
+        }
+
+        button.dataset.text = button.innerText;
+        button.setAttribute("aria-busy", "true");
+        button.disabled = true;
+        button.innerHTML = '<span class="button-spinner" aria-label="Loading"></span>';
+        return;
+    }
+
+    button.innerText = button.dataset.text || button.innerText;
+    button.disabled = button.classList.contains("disabled");
+    delete button.dataset.text;
+    button.removeAttribute("aria-busy");
 }
 
-function hideLoader() {
-    loader.classList.remove("active");
-    attendanceBtn.style.display = "block";
+function showError(element, message) {
+    element.innerText = message;
+    element.classList.add("active");
+}
+
+function clearError(element) {
+    element.innerText = "";
+    element.classList.remove("active");
+}
+
+async function getErrorMessage(response, fallback) {
+    try {
+        const data = await response.json();
+        return data.detail || data.message || data.error || fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function getStoredValues(keys) {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(keys, resolve);
+    });
 }
 
 async function login() {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
+    clearError(loginError);
 
     // validation
     if (email === "" || password === "") {
-        status.innerText = "❌ Invalid Inputs";
+        showError(loginError, "Please enter your email and password.");
         return;
     }
 
     // fetch login API
     try {
+        setButtonLoading(loginBtn, true);
 
         const payload = {
             email: email,
@@ -86,8 +123,6 @@ async function login() {
         });
 
         if (response.ok) {
-            status.innerText = "✅ Checked In";
-
             const data = await response.json();
 
             chrome.storage.local.set(
@@ -101,12 +136,17 @@ async function login() {
                 }
             );
         } else {
-            status.innerText = "❌ Failed";
+            showError(
+                loginError,
+                await getErrorMessage(response, "Login failed. Please check your credentials.")
+            );
         }
 
     } catch (err) {
         console.log(err);
-        status.innerText = "Network Error";
+        showError(loginError, "Unable to connect. Please try again.");
+    } finally {
+        setButtonLoading(loginBtn, false);
     }
 }
 
@@ -117,64 +157,76 @@ function logout() {
 }
 
 async function loadAttendanceStatus() {
-    chrome.storage.local.get(["accessToken"], async (result) => {
+    const result = await getStoredValues(["accessToken"]);
 
-        if (!result.accessToken) {
+    if (!result.accessToken) {
+        logout();
+        return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+        clearError(attendanceError);
+        setButtonLoading(attendanceBtn, true);
+        const response = await fetch(
+            `${BASE_URL}/attendance/me/?date_after=${today}&date_before=${today}`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${result.accessToken}`
+                }
+            }
+        );
+        if (response.status === 401) {
             logout();
             return;
         }
 
-        const today = new Date().toISOString().split("T")[0];
-
-        try {
-            showLoader();
-            const response = await fetch(
-                `${BASE_URL}/attendance/me/?date_after=${today}&date_before=${today}`,
-                {
-                    headers: {
-                        "Authorization": `Bearer ${result.accessToken}`
-                    }
-                }
+        if (!response.ok) {
+            showError(
+                attendanceError,
+                await getErrorMessage(response, "Could not load attendance status.")
             );
-            if (response.status === 401) {
-                logout();
-                return;
-            }
-
-            if (!response.ok) return;
-
-            const data = await response.json();
-
-            const logs =
-                data.results.length > 0
-                    ? data.results[0].user_entry_logs || []
-                    : [];
-
-            const hasCheckIn = logs.some(log => log.type === "in");
-            const hasCheckOut = logs.some(log => log.type === "out");
-
-            if (!hasCheckIn) {
-                // No check-in yet
-                setAttendanceButton("Check In", false, "checkin", checkIn);
-
-            } else if (!hasCheckOut) {
-                // Checked in, but not checked out
-                setAttendanceButton("Check Out", false, "checkout", checkOut);
-
-            } else {
-                // Both check-in and check-out completed
-                setAttendanceButton("Checked Out", true, "disabled", null);
-            }
-        } catch (err) {
-            console.log(err);
-        } finally {
-            hideLoader();
+            return;
         }
-    });
+
+        const data = await response.json();
+
+        const logs =
+            data.results.length > 0
+                ? data.results[0].user_entry_logs || []
+                : [];
+
+        const hasCheckIn = logs.some(log => log.type === "in");
+        const hasCheckOut = logs.some(log => log.type === "out");
+
+        if (!hasCheckIn) {
+            // No check-in yet
+            setAttendanceButton("Check In", false, "checkin", checkIn);
+
+        } else if (!hasCheckOut) {
+            // Checked in, but not checked out
+            setAttendanceButton("Check Out", false, "checkout", checkOut);
+
+        } else {
+            // Both check-in and check-out completed
+            setAttendanceButton("Checked Out", true, "disabled", null);
+        }
+    } catch (err) {
+        console.log(err);
+        showError(attendanceError, "Unable to connect. Please try again.");
+    } finally {
+        setButtonLoading(attendanceBtn, false);
+    }
 }
 
 function setAttendanceButton(text, disabled, buttonClass, onClick) {
-    attendanceBtn.innerText = text;
+    if (attendanceBtn.getAttribute("aria-busy") === "true") {
+        attendanceBtn.dataset.text = text;
+    } else {
+        attendanceBtn.innerText = text;
+    }
+
     attendanceBtn.disabled = disabled;
     attendanceBtn.onclick = onClick;
 
@@ -185,57 +237,67 @@ function setAttendanceButton(text, disabled, buttonClass, onClick) {
 }
 
 async function checkIn() {
-    chrome.storage.local.get(["accessToken"], async (result) => {
+    const result = await getStoredValues(["accessToken"]);
 
-        try {
-            const response = await fetch(
-                `${BASE_URL}/attendance/check-in/`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${result.accessToken}`,
-                        "Content-Type": "application/json"
-                    }
+    try {
+        clearError(attendanceError);
+        setButtonLoading(attendanceBtn, true);
+        const response = await fetch(
+            `${BASE_URL}/attendance/check-in/`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${result.accessToken}`,
+                    "Content-Type": "application/json"
                 }
-            );
-
-            if (response.ok) {
-                await loadAttendanceStatus();
-            } else {
-                console.error("Check In failed");
             }
+        );
 
-        } catch (err) {
-            console.error(err);
+        if (response.ok) {
+            await loadAttendanceStatus();
+        } else {
+            showError(
+                attendanceError,
+                await getErrorMessage(response, "Check in failed. Please try again.")
+            );
         }
-
-    });
+    } catch (err) {
+        console.error(err);
+        showError(attendanceError, "Unable to connect. Please try again.");
+    } finally {
+        setButtonLoading(attendanceBtn, false);
+    }
 }
 
 async function checkOut() {
-    chrome.storage.local.get(["accessToken"], async (result) => {
+    const result = await getStoredValues(["accessToken"]);
 
-        try {
-            const response = await fetch(
-                `${BASE_URL}/attendance/check-out/`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${result.accessToken}`,
-                        "Content-Type": "application/json"
-                    }
+    try {
+        clearError(attendanceError);
+        setButtonLoading(attendanceBtn, true);
+        const response = await fetch(
+            `${BASE_URL}/attendance/check-out/`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${result.accessToken}`,
+                    "Content-Type": "application/json"
                 }
-            );
-
-            if (response.ok) {
-                await loadAttendanceStatus();
-            } else {
-                console.error("Check Out failed");
             }
+        );
 
-        } catch (err) {
-            console.error(err);
+        if (response.ok) {
+            await loadAttendanceStatus();
+        } else {
+            showError(
+                attendanceError,
+                await getErrorMessage(response, "Check out failed. Please try again.")
+            );
         }
-
-    });
+    } catch (err) {
+        console.error(err);
+        showError(attendanceError, "Unable to connect. Please try again.");
+    } finally {
+        setButtonLoading(attendanceBtn, false);
+    }
 }
